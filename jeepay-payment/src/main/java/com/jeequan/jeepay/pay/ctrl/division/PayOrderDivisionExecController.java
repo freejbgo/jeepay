@@ -104,7 +104,16 @@ public class PayOrderDivisionExecController extends ApiController {
             ChannelRetMsg channelRetMsg = payOrderDivisionProcessService.processPayOrderDivision(payOrder.getPayOrderId(), bizRQ.getUseSysAutoDivisionReceivers(), receiverList, false);
 
             PayOrderDivisionExecRS bizRS = new PayOrderDivisionExecRS();
-            bizRS.setState(channelRetMsg.getChannelState() == ChannelRetMsg.ChannelState.CONFIRM_SUCCESS ? PayOrderDivisionRecord.STATE_SUCCESS : PayOrderDivisionRecord.STATE_FAIL);
+
+
+            if(channelRetMsg.getChannelState() == ChannelRetMsg.ChannelState.CONFIRM_SUCCESS){
+                bizRS.setState(PayOrderDivisionRecord.STATE_SUCCESS);
+            }else if(channelRetMsg.getChannelState() == ChannelRetMsg.ChannelState.CONFIRM_FAIL){
+                bizRS.setState(PayOrderDivisionRecord.STATE_FAIL);
+            }else{
+                bizRS.setState(PayOrderDivisionRecord.STATE_ACCEPT);
+            }
+
             bizRS.setChannelBatchOrderId(channelRetMsg.getChannelOrderId());
             bizRS.setErrCode(channelRetMsg.getChannelErrCode());
             bizRS.setErrMsg(channelRetMsg.getChannelErrMsg());
@@ -115,7 +124,7 @@ public class PayOrderDivisionExecController extends ApiController {
             return ApiRes.customFail(e.getMessage());
 
         } catch (Exception e) {
-            log.error("系统异常：{}", e);
+            log.error("系统异常：payOrderId={}", bizRQ.getPayOrderId(), e);
             return ApiRes.customFail("系统异常");
         }
     }
